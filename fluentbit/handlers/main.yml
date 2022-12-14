@@ -1,0 +1,8 @@
+---
+# handlers file for fluentbit
+
+  - name: Restart systemd unit fluentbit
+    ansible.builtin.systemd:
+      daemon-reload: true
+      state: restarted
+      name: fluent-bit

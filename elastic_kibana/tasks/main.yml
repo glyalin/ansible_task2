@@ -1,0 +1,95 @@
+---
+# tasks file for elastic_kibana
+
+- name: "Copy elasticsearch-8.5.3-amd64.deb"
+  ansible.builtin.copy:
+    src: /media/sf_Notebook/MonLogK8sTask/elasticsearch-8.5.3-amd64.deb
+    dest: /tmp/elasticsearch-8.5.3-amd64.deb
+    mode: 0755
+
+- name: "Copy kibana-8.5.3-amd64.deb"
+  ansible.builtin.copy:
+    src: /media/sf_Notebook/MonLogK8sTask/kibana-8.5.3-amd64.deb
+    dest: /tmp/kibana-8.5.3-amd64.deb
+    mode: 0755
+
+- name: Install a .deb package of elasticsearch
+  ansible.builtin.apt:
+    deb: /tmp/elasticsearch-8.5.3-amd64.deb
+
+- name: Install a .deb package of kibana
+  ansible.builtin.apt:
+    deb: /tmp/kibana-8.5.3-amd64.deb
+
+- name: "Start systemd service to lunch elasticsearch"
+  ansible.builtin.systemd:
+    daemon-reload: true
+    state: started
+    enabled: yes
+    name: elasticsearch
+
+- name: "Start systemd service to lunch kibana"
+  ansible.builtin.systemd:
+    daemon-reload: true
+    state: started
+    enabled: yes
+    name: kibana
+
+- name: "Ensure passwd file for elasticsearch exists"
+  ansible.builtin.stat:
+    path: "/home/renearroi/secret"
+  register: elasticsearch
+
+- name: "Reset elasticsearch passwd"
+  ansible.builtin.expect:
+    command: /bin/bash -c "/usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic > /home/renearroi/secret"
+    responses:
+      (.*)Please confirm that you would like to continue \[y/N\](.*): "y"
+  when: not elasticsearch.stat.exists
+
+- name: "Chmod for elasticsearch passwd"
+  ansible.builtin.file:
+    path: /home/renearroi/secret
+    mode: 0600
+
+- name: "Add the user kibana to the group elasticsearch"
+  ansible.builtin.user:
+    name: kibana
+    groups: elasticsearch
+    append: true
+
+- name: "Ensure passwd file for kibana exists"
+  ansible.builtin.stat:
+    path: "/home/renearroi/kibana_secret"
+  register: kibana_token_file
+
+- name: "Reset kibana passwd"
+  ansible.builtin.expect:
+    command: /bin/bash -c "/usr/share/elasticsearch/bin/elasticsearch-reset-password -u kibana_system > /home/renearroi/kibana_secret"
+    responses:
+      (.*)Please confirm that you would like to continue \[y/N\](.*): "y"
+  when: not kibana_token_file.stat.exists
+
+- name: "Chmod for kibana passwd"
+  ansible.builtin.file:
+    path: /home/renearroi/kibana_secret
+    mode: 0600
+
+- name: "Register the kibana passwd"
+  ansible.builtin.shell:
+    cmd: cat /home/renearroi/kibana_secret | grep New | cut -c 12-33
+  register: kibana_token
+
+- name: "Set fact for kibana_token variable"
+  set_fact: 
+    kibana_token={{ kibana_token.stdout }}
+
+- name: "Set kibana config file"
+  ansible.builtin.template:
+    src: kibana.j2
+    dest: /etc/kibana/kibana.yml
+    owner: root
+    group: kibana
+    mode: 0660
+  notify:
+  - Restart systemd unit kibana

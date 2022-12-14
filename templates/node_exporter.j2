@@ -1,0 +1,4 @@
+  - job_name: node
+    static_configs:
+      - targets:
+          ['{{ hostvars['server1'].ansible_host }}:9100', '{{ hostvars['server2'].ansible_host }}:9100']

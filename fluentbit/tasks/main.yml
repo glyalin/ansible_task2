@@ -1,0 +1,34 @@
+---
+# tasks file for fluentbit
+
+- name: "Add fluentbit repo with key"
+  block:
+    - name: Add fluentbit repo key | no apt key
+      ansible.builtin.get_url:
+        url: https://packages.fluentbit.io/fluentbit.key
+        dest: /usr/share/keyrings/fluentbit-keyring.asc
+
+    - name: fluentbit repo | apt source
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/fluentbit-keyring.asc] https://packages.fluentbit.io/ubuntu/{{ ansible_distribution_release }} {{ ansible_distribution_release }} main"
+        state: present
+
+- name: "Install fluentbit from the repo"
+  ansible.builtin.apt:
+    name: fluent-bit={{ fluentbit_ver }}
+    state: present
+    update_cache: true
+
+- name: "Start systemd service to lunch fluentbit"
+  ansible.builtin.systemd:
+    daemon-reload: true
+    state: started
+    enabled: yes
+    name: fluent-bit
+
+- name: "Set fluentbit config file"
+  ansible.builtin.template:
+    src: fluentbit.j2
+    dest: /etc/fluent-bit/fluent-bit.conf
+  notify:
+  - Restart systemd unit fluentbit

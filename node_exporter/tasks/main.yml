@@ -1,0 +1,66 @@
+---
+# tasks file for node_exporter
+
+- name: "Make the group for node_exporter"
+  ansible.builtin.group:
+    name: node_exporter
+    state: present
+
+- name: "Add the user and node_exporter"
+  ansible.builtin.user:
+    name: node_exporter
+    group: node_exporter
+    shell: /bin/false
+    comment: node_exporter user
+
+- name: "Ensure node_exporter bin exists"
+  ansible.builtin.stat:
+    path: "/usr/local/bin/node_exporter"
+  register: node_exporter_bin
+
+- name: "Create a directory for node_exporter download"
+  ansible.builtin.file:
+    path: /tmp/node
+    state: directory
+    mode: 0755
+
+- name: "Download and extract prometheus version in default folder"
+  ansible.builtin.unarchive:
+    src: "{{ node_export_url_ver }}"
+    dest: /tmp/node
+    remote_src: true
+    list_files: yes
+    extra_opts: [--strip-components=1]
+
+- name: "Copy prometheus bin file with owner and permissions"
+  ansible.builtin.copy:
+    src: /tmp/node/node_exporter
+    dest: /usr/local/bin/node_exporter
+    mode: 0755
+    remote_src: true
+
+- name: "Set node_exporter systemd file"
+  ansible.builtin.template:
+    src: node_export_systemd_unit.j2
+    dest: /usr/lib/systemd/system/node_exporter.service
+  notify:
+  - Restart systemd unit node_exporter
+
+- name: "Start systemmd service to lunch node_exporter"
+  ansible.builtin.systemd:
+    daemon-reload: true
+    state: started
+    enabled: yes
+    name: node_exporter
+  when: not node_exporter_bin.stat.exists
+
+#- name: "Add node_exporters to prometheus config"
+#  ansible.builtin.blockinfile:
+#    path: /etc/prometheus/prometheus.yml
+#    insertafter: "# add 1st node_exporter"
+#    block: |2
+#        - job_name: node
+#          static_configs:
+#            - targets: ['{{ ansible_host }}:9100']
+#  notify:
+#  - Reload systemd unit prometheus

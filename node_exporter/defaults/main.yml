@@ -1,0 +1,6 @@
+---
+# defaults file for node_exporter
+
+# url for download node_exporter, ver in playbook:
+
+node_export_url_ver: https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz

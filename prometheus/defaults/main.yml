@@ -1,0 +1,9 @@
+---
+# defaults file for prometheus
+# url for download prometheus ver in playbook
+
+prometheus_url_ver: https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz
+
+
+# var for prometheus.yml config:
+
