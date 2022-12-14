@@ -37,19 +37,19 @@
 
 - name: "Ensure passwd file for elasticsearch exists"
   ansible.builtin.stat:
-    path: "/home/renearroi/secret"
+    path: "/home/{{ ansible_user }}/secret"
   register: elasticsearch
 
 - name: "Reset elasticsearch passwd"
   ansible.builtin.expect:
-    command: /bin/bash -c "/usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic > /home/renearroi/secret"
+    command: /bin/bash -c "/usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic > /home/{{ ansible_user }}/secret"
     responses:
       (.*)Please confirm that you would like to continue \[y/N\](.*): "y"
   when: not elasticsearch.stat.exists
 
 - name: "Chmod for elasticsearch passwd"
   ansible.builtin.file:
-    path: /home/renearroi/secret
+    path: /home/{{ ansible_user }}/secret
     mode: 0600
 
 - name: "Add the user kibana to the group elasticsearch"
@@ -60,24 +60,24 @@
 
 - name: "Ensure passwd file for kibana exists"
   ansible.builtin.stat:
-    path: "/home/renearroi/kibana_secret"
+    path: "/home/{{ ansible_user }}/kibana_secret"
   register: kibana_token_file
 
 - name: "Reset kibana passwd"
   ansible.builtin.expect:
-    command: /bin/bash -c "/usr/share/elasticsearch/bin/elasticsearch-reset-password -u kibana_system > /home/renearroi/kibana_secret"
+    command: /bin/bash -c "/usr/share/elasticsearch/bin/elasticsearch-reset-password -u kibana_system > /home/{{ ansible_user }}/kibana_secret"
     responses:
       (.*)Please confirm that you would like to continue \[y/N\](.*): "y"
   when: not kibana_token_file.stat.exists
 
 - name: "Chmod for kibana passwd"
   ansible.builtin.file:
-    path: /home/renearroi/kibana_secret
+    path: /home/{{ ansible_user }}/kibana_secret
     mode: 0600
 
 - name: "Register the kibana passwd"
   ansible.builtin.shell:
-    cmd: cat /home/renearroi/kibana_secret | grep New | cut -c 12-33
+    cmd: cat /home/{{ ansible_user }}/kibana_secret | grep New | cut -c 12-33
   register: kibana_token
 
 - name: "Set fact for kibana_token variable"
