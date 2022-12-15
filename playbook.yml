@@ -8,6 +8,10 @@
     node_exporter_version: 1.5.0
     fluentbit_ver: 2.0.6
     ansible_user: renearroi
+    elastic_deb: elasticsearch-8.5.3-amd64.deb
+    kibana_deb: kibana-8.5.3-amd64.deb
+    directory_path_for_deb_pack: /media/sf_Notebook/MonLogK8sTask
+    
 
   roles:
 # role to install prometheus

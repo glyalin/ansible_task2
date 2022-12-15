@@ -1,25 +1,25 @@
 ---
 # tasks file for elastic_kibana
 
-- name: "Copy elasticsearch-8.5.3-amd64.deb"
+- name: "Copy elasticsearch deb package"
   ansible.builtin.copy:
-    src: /media/sf_Notebook/MonLogK8sTask/elasticsearch-8.5.3-amd64.deb
-    dest: /tmp/elasticsearch-8.5.3-amd64.deb
+    src: "{{ directory_path_for_deb_pack_elastic }}"
+    dest: "/tmp/{{ elastic_deb }}"
     mode: 0755
 
-- name: "Copy kibana-8.5.3-amd64.deb"
+- name: "Copy kibana deb package"
   ansible.builtin.copy:
-    src: /media/sf_Notebook/MonLogK8sTask/kibana-8.5.3-amd64.deb
-    dest: /tmp/kibana-8.5.3-amd64.deb
+    src: "{{ directory_path_for_deb_pack_kibana }}"
+    dest: "/tmp/{{ kibana_deb }}"
     mode: 0755
 
 - name: Install a .deb package of elasticsearch
   ansible.builtin.apt:
-    deb: /tmp/elasticsearch-8.5.3-amd64.deb
+    deb: "/tmp/{{ elastic_deb }}"
 
 - name: Install a .deb package of kibana
   ansible.builtin.apt:
-    deb: /tmp/kibana-8.5.3-amd64.deb
+    deb: "/tmp/{{ kibana_deb }}"
 
 - name: "Start systemd service to lunch elasticsearch"
   ansible.builtin.systemd:
@@ -49,7 +49,7 @@
 
 - name: "Chmod for elasticsearch passwd"
   ansible.builtin.file:
-    path: /home/{{ ansible_user }}/secret
+    path: "/home/{{ ansible_user }}/secret"
     mode: 0600
 
 - name: "Add the user kibana to the group elasticsearch"
@@ -72,12 +72,12 @@
 
 - name: "Chmod for kibana passwd"
   ansible.builtin.file:
-    path: /home/{{ ansible_user }}/kibana_secret
+    path: "/home/{{ ansible_user }}/kibana_secret"
     mode: 0600
 
 - name: "Register the kibana passwd"
   ansible.builtin.shell:
-    cmd: cat /home/{{ ansible_user }}/kibana_secret | grep New | cut -c 12-33
+    cmd: "cat /home/{{ ansible_user }}/kibana_secret | grep New | cut -c 12-33"
   register: kibana_token
 
 - name: "Set fact for kibana_token variable"

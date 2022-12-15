@@ -3,3 +3,6 @@
 
 # kibana values:
 
+directory_path_for_deb_pack_elastic: "{{ directory_path_for_deb_pack }}/{{ elastic_deb }}"
+
+directory_path_for_deb_pack_kibana: "{{ directory_path_for_deb_pack }}/{{ kibana_deb }}"
